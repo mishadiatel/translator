@@ -9,6 +9,7 @@ import {MAX_CHARS_TO_TRANSLATE} from "@/data/data";
 
 interface Props {
     isResult: boolean;
+    translateFunc?: () => void;
 }
 
 const TextInput: React.FC<Props> = ({isResult}) => {
@@ -21,18 +22,26 @@ const TextInput: React.FC<Props> = ({isResult}) => {
     } = useAppSelector((state) => state.translatorReducer);
 
     const changeInputHandler = (e: ChangeEvent<HTMLInputElement>) => {
-        if(numChars < MAX_CHARS_TO_TRANSLATE) {
-            dispatch(translateEvents.changeInitialText(e.target.value));
-            setNumChars(e.target.value.length);
+        if(!isResult) {
+            if(numChars <= MAX_CHARS_TO_TRANSLATE) {
+                dispatch(translateEvents.changeInitialText(e.target.value));
+                setNumChars(e.target.value.length);
+            } else {
+                alert ('Input text can\'t be more then 500 chars');
+                dispatch(translateEvents.changeInitialText(e.target.value.substring(0, MAX_CHARS_TO_TRANSLATE-1)));
+                setNumChars(initialText.length);
+            }
         }
-
     };
 
-    const callback = () => {
-        dispatch(translate(initialText, originalLang, translatedLang));
-    };
+    if(!isResult) {
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        useDebounce(() => {
+            dispatch(translate(initialText, originalLang, translatedLang));
+        }, 1000);
 
-    useDebounce(callback, 1000);
+    }
+
 
     return (
         <>
